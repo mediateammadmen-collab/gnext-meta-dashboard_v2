@@ -1,5 +1,12 @@
 import "server-only";
-import { RANGE_OPTIONS, EXTRA_ACTION_CANDIDATES, ENGAGEMENT_ACTION_TYPES, COUNTRIES } from "./constants";
+import {
+  RANGE_OPTIONS,
+  EXTRA_ACTION_CANDIDATES,
+  ENGAGEMENT_ACTION_TYPES,
+  INTERACTION_ACTION_TYPES,
+  VIDEO_VIEW_ACTION_TYPES,
+  COUNTRIES,
+} from "./constants";
 import { getWeekStartDate, getWeekEndDate, todayDateString } from "./weeks";
 
 // The ad account occasionally serves stray impressions outside the markets
@@ -367,6 +374,8 @@ function aggregateRows(rows) {
   const clicksAll = rows.reduce((s, r) => s + numberOr0(r.clicks), 0);
   const allActions = rows.flatMap((r) => r.actions || []);
   const engagements = sumActions(allActions, ENGAGEMENT_ACTION_TYPES);
+  const interactions = sumActions(allActions, INTERACTION_ACTION_TYPES);
+  const videoViews = sumActions(allActions, VIDEO_VIEW_ACTION_TYPES);
   const linkClicks = sumActions(allActions, ["link_click"]);
   // Weighted averages for rate-style metrics — computed from summed raw
   // counts, not by averaging each row's own ctr/frequency, so combining
@@ -378,7 +387,19 @@ function aggregateRows(rows) {
   const ctr = impressions > 0 ? (clicksAll / impressions) * 100 : 0;
   const cpm = impressions > 0 ? (spend / impressions) * 1000 : 0;
 
-  return { spend, reach, impressions, engagements, linkClicks, frequency, ctr, cpm, allActions };
+  return {
+    spend,
+    reach,
+    impressions,
+    engagements,
+    interactions,
+    videoViews,
+    linkClicks,
+    frequency,
+    ctr,
+    cpm,
+    allActions,
+  };
 }
 
 export function shapeSummary(countryRows, selectedCountryCode) {
@@ -387,7 +408,9 @@ export function shapeSummary(countryRows, selectedCountryCode) {
     : countryRows;
 
   const agg = aggregateRows(relevantRows);
-  const engagementRate = agg.impressions > 0 ? agg.engagements / agg.impressions : 0;
+  // Both rates are by reach (unique people), stored as a 0-1 fraction.
+  const engagementRate = agg.reach > 0 ? agg.engagements / agg.reach : 0;
+  const interactionRate = agg.reach > 0 ? agg.interactions / agg.reach : 0;
 
   const extraActions = [];
   for (const candidate of EXTRA_ACTION_CANDIDATES) {
@@ -412,6 +435,8 @@ export function shapeSummary(countryRows, selectedCountryCode) {
     engagements: agg.engagements,
     frequency: agg.frequency,
     engagementRate,
+    interactions: agg.interactions,
+    interactionRate,
     linkClicks: agg.linkClicks,
     ctr: agg.ctr,
     cpm: agg.cpm,
@@ -491,6 +516,8 @@ export function shapeCreatives(ads, adInsightRows, selectedCountryCode, videoSou
         reach: agg.reach,
         impressions: agg.impressions,
         engagements: agg.engagements,
+        // Only meaningful for video creatives; null hides the tile.
+        videoViews: videoId ? agg.videoViews : null,
         linkClicks: agg.linkClicks,
         ctr: agg.ctr,
         frequency: agg.frequency,

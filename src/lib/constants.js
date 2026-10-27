@@ -40,6 +40,19 @@ export function countryLabelFromCode(code) {
 // for Page Post Engagement campaigns.
 export const ENGAGEMENT_ACTION_TYPES = ["post_engagement"];
 
+// "Interactions" are the direct social actions on a post — reactions,
+// comments, shares ("post") and saves — unlike post_engagement, which also
+// counts link clicks, photo views and video plays.
+export const INTERACTION_ACTION_TYPES = [
+  "post_reaction",
+  "comment",
+  "post",
+  "onsite_conversion.post_save",
+];
+
+// Meta's `video_view` action is its 3-second video view count.
+export const VIDEO_VIEW_ACTION_TYPES = ["video_view"];
+
 export const LINK_CLICK_ACTION_TYPES = ["link_click"];
 
 // Optional metrics surfaced only when present in the `actions` payload for

@@ -8,7 +8,7 @@ import {
 import { cn } from "@/lib/utils";
 
 // Each metric's raw value lives in `summary` under `key`. `toPercentValue`
-// normalizes fields that are stored as a 0-1 fraction (engagementRate) so
+// normalizes fields that are stored as a 0-1 fraction (engagementRate, interactionRate) so
 // every metric can share the same percent-change math.
 const METRICS = [
   { key: "spend", label: "Spend", format: (v) => formatCurrency(v) },
@@ -19,6 +19,12 @@ const METRICS = [
   {
     key: "engagementRate",
     label: "Engagement Rate",
+    format: (v) => formatPercent(v * 100),
+    toPercentValue: (v) => v * 100,
+  },
+  {
+    key: "interactionRate",
+    label: "Interaction Rate",
     format: (v) => formatPercent(v * 100),
     toPercentValue: (v) => v * 100,
   },

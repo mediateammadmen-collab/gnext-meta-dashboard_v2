@@ -59,6 +59,11 @@ export function SummarySection({ summary, isAllCountries, compact = false, hideC
           value={formatPercent(summary.engagementRate * 100)}
           compact={compact}
         />
+        <SmallStat
+          label="Interaction rate"
+          value={formatPercent(summary.interactionRate * 100)}
+          compact={compact}
+        />
         <SmallStat label="Link clicks" value={formatNumber(summary.linkClicks)} compact={compact} />
         <SmallStat label="CTR" value={formatPercent(summary.ctr)} compact={compact} />
         <SmallStat label="CPM" value={formatCurrency(summary.cpm)} compact={compact} />

@@ -27,6 +27,9 @@ export function AdMetricsGrid({ metrics, campaignType, highlightCostPerEngagemen
         />
       )}
       <StatTile label={metrics.resultsLabel || "Results"} value={formatNumber(metrics.results)} />
+      {metrics.videoViews != null ? (
+        <StatTile label="3s Views" value={formatNumber(metrics.videoViews)} />
+      ) : null}
     </div>
   );
 }
