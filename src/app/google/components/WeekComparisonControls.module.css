@@ -1,0 +1,58 @@
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.select {
+  appearance: none;
+  background: var(--surface-1)
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%23898781' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>")
+    no-repeat right 12px center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 32px 8px 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  min-width: 200px;
+}
+
+.select:hover {
+  border-color: var(--baseline);
+}
+
+.showButton {
+  appearance: none;
+  border: none;
+  border-radius: 8px;
+  background: var(--series-1);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 9px 18px;
+  cursor: pointer;
+}
+
+.backLink {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.backLink:hover {
+  color: var(--text-primary);
+}

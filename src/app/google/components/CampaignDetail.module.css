@@ -1,0 +1,88 @@
+.detail {
+  padding: 16px;
+  background: var(--background);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.blockTitle {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.empty {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.adList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.adCard {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.adMeta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.chipGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  font-size: 0.78rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--gridline);
+  color: var(--text-primary);
+}
+
+.chipDescription {
+  background: transparent;
+  border: 1px solid var(--gridline);
+}
+
+.creativeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.creativeCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: inherit;
+}
+
+.thumbnail {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--gridline);
+}

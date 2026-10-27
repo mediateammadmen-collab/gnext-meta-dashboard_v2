@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+  # Next.js/Turbopack's build cache stores resolved env values for faster
+  # rebuilds - it's never served publicly, but Netlify's secrets scanner
+  # flags it as a false positive without this.
+  SECRETS_SCAN_OMIT_PATHS = ".next/cache/**,.netlify/.next/cache/**"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
