@@ -1,10 +1,15 @@
 import Image from "next/image";
+import Link from "next/link";
 import { AppSwitcherButton } from "@/components/app-switcher-button";
 
 export function DashboardHeader() {
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800 bg-zinc-950 px-6 py-5">
-      <div className="flex items-center gap-4">
+      <Link
+        href="/"
+        aria-label="Go to home"
+        className="flex items-center gap-4 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+      >
         <div className="bg-white rounded px-1">
           <Image
             src="/gnext.png"
@@ -23,7 +28,7 @@ export function DashboardHeader() {
             Real-time spend, reach, and creative insights from Meta.
           </p>
         </div>
-      </div>
+      </Link>
 
       <div className="flex items-center gap-3">
         <AppSwitcherButton />
