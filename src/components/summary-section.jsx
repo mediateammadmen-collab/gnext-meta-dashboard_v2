@@ -60,6 +60,11 @@ export function SummarySection({ summary, isAllCountries, compact = false, hideC
           compact={compact}
         />
         <SmallStat
+          label="Post interactions"
+          value={formatNumber(summary.interactions)}
+          compact={compact}
+        />
+        <SmallStat
           label="Interaction rate"
           value={formatPercent(summary.interactionRate * 100)}
           compact={compact}

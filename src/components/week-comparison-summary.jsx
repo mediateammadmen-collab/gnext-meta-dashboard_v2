@@ -23,6 +23,11 @@ const METRICS = [
     toPercentValue: (v) => v * 100,
   },
   {
+    key: "interactions",
+    label: "Post Interactions",
+    format: (v) => formatCompactNumber(v),
+  },
+  {
     key: "interactionRate",
     label: "Interaction Rate",
     format: (v) => formatPercent(v * 100),
