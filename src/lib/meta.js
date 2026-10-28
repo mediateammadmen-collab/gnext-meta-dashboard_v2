@@ -408,8 +408,9 @@ export function shapeSummary(countryRows, selectedCountryCode) {
     : countryRows;
 
   const agg = aggregateRows(relevantRows);
-  // Both rates are by reach (unique people), stored as a 0-1 fraction.
-  const engagementRate = agg.reach > 0 ? agg.engagements / agg.reach : 0;
+  // Stored as 0-1 fractions. Engagement rate is by impressions; interaction
+  // rate is by reach (unique people).
+  const engagementRate = agg.impressions > 0 ? agg.engagements / agg.impressions : 0;
   const interactionRate = agg.reach > 0 ? agg.interactions / agg.reach : 0;
 
   const extraActions = [];
