@@ -2,6 +2,7 @@ import {
   getAccountInsightsByCountry,
   getAdInsightsByCountry,
   getAdsByIds,
+  getSpendByCountry,
   getLargeThumbnails,
   getVideoSourcesForAds,
   resolveDateParams,
@@ -31,8 +32,9 @@ export default async function DashboardPage({ searchParams }) {
   const countryMeta = COUNTRIES.find((c) => c.value === country);
   const countryCode = countryMeta?.code || null;
 
-  const [countryRows, adInsightRows] = await Promise.all([
-    getAccountInsightsByCountry(dateParams),
+  const [summaryRows, byCountry, adInsightRows] = await Promise.all([
+    getAccountInsightsByCountry(dateParams, countryCode),
+    countryCode ? [] : getSpendByCountry(dateParams),
     getAdInsightsByCountry(dateParams),
   ]);
 
@@ -46,7 +48,7 @@ export default async function DashboardPage({ searchParams }) {
     getLargeThumbnails(thumbnailCreativeIds),
   ]);
 
-  const summary = shapeSummary(countryRows, countryCode);
+  const summary = shapeSummary(summaryRows, byCountry);
   const creatives = shapeCreatives(ads, adInsightRows, countryCode, videoSources, largeThumbnails);
 
   return (

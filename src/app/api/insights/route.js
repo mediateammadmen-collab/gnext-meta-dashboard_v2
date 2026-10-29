@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { getAccountInsightsByCountry, resolveDateParams, shapeSummary } from "@/lib/meta";
+import {
+  getAccountInsightsByCountry,
+  getSpendByCountry,
+  resolveDateParams,
+  shapeSummary,
+} from "@/lib/meta";
 import { COUNTRIES, DEFAULT_RANGE, DEFAULT_COUNTRY } from "@/lib/constants";
 
 export const revalidate = 300;
@@ -13,9 +18,12 @@ export async function GET(request) {
 
   try {
     const dateParams = resolveDateParams(range, start, end);
-    const countryRows = await getAccountInsightsByCountry(dateParams);
-    const countryMeta = COUNTRIES.find((c) => c.value === country);
-    const summary = shapeSummary(countryRows, countryMeta?.code || null);
+    const countryCode = COUNTRIES.find((c) => c.value === country)?.code || null;
+    const [summaryRows, byCountry] = await Promise.all([
+      getAccountInsightsByCountry(dateParams, countryCode),
+      countryCode ? [] : getSpendByCountry(dateParams),
+    ]);
+    const summary = shapeSummary(summaryRows, byCountry);
 
     return NextResponse.json({ range, country, summary });
   } catch (error) {

@@ -15,15 +15,20 @@ export const RANGE_OPTIONS = [
 
 export const DEFAULT_RANGE = "14d";
 
+// Campaigns are assigned to a country by `campaignKeyword` appearing in the
+// campaign name (case-insensitive), matching how the team filters Ads
+// Manager — not by where Meta actually delivered the impressions. Maldives
+// uses "maldive" so both "Gnext Maldive | ..." and "Gnext Maldives | ..."
+// campaigns match.
 export const COUNTRIES = [
-  { value: "all", label: "All countries", code: null },
-  { value: "bangladesh", label: "Bangladesh", code: "BD" },
-  { value: "nepal", label: "Nepal", code: "NP" },
-  { value: "myanmar", label: "Myanmar", code: "MM" },
-  { value: "mongolia", label: "Mongolia", code: "MN" },
-  { value: "maldives", label: "Maldives", code: "MV" },
-  { value: "bhutan", label: "Bhutan", code: "BT" },
-  { value: "brunei", label: "Brunei", code: "BN" },
+  { value: "all", label: "All countries", code: null, campaignKeyword: null },
+  { value: "bangladesh", label: "Bangladesh", code: "BD", campaignKeyword: "bangladesh" },
+  { value: "nepal", label: "Nepal", code: "NP", campaignKeyword: "nepal" },
+  { value: "myanmar", label: "Myanmar", code: "MM", campaignKeyword: "myanmar" },
+  { value: "mongolia", label: "Mongolia", code: "MN", campaignKeyword: "mongolia" },
+  { value: "maldives", label: "Maldives", code: "MV", campaignKeyword: "maldive" },
+  { value: "bhutan", label: "Bhutan", code: "BT", campaignKeyword: "bhutan" },
+  { value: "brunei", label: "Brunei", code: "BN", campaignKeyword: "brunei" },
 ];
 
 export const DEFAULT_COUNTRY = "all";

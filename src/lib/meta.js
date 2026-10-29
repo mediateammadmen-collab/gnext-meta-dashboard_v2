@@ -9,14 +9,19 @@ import {
 } from "./constants";
 import { getWeekStartDate, getWeekEndDate, todayDateString } from "./weeks";
 
-// The ad account occasionally serves stray impressions outside the markets
-// we actually run campaigns in (CN, IN, LK, TH, GB, US, "unknown" have shown
-// up in insights). Only the countries in the dashboard's own country filter
-// are real markets, so every insights response is restricted to those.
-const TRACKED_COUNTRY_CODES = new Set(COUNTRIES.map((c) => c.code).filter(Boolean));
+// Resolves which dashboard country a campaign belongs to from its name
+// (see COUNTRIES' campaignKeyword). Returns null when no keyword matches.
+function countryCodeFromCampaignName(campaignName) {
+  const name = (campaignName || "").toLowerCase();
+  return (
+    COUNTRIES.find((c) => c.campaignKeyword && name.includes(c.campaignKeyword))?.code || null
+  );
+}
 
-function filterToTrackedCountries(rows) {
-  return rows.filter((row) => TRACKED_COUNTRY_CODES.has(row.country));
+function campaignNameFilter(countryCode) {
+  const keyword = COUNTRIES.find((c) => c.code === countryCode)?.campaignKeyword;
+  if (!keyword) return undefined;
+  return [{ field: "campaign.name", operator: "CONTAIN", value: keyword }];
 }
 
 const GRAPH_BASE = "https://graph.facebook.com";
@@ -195,36 +200,64 @@ function resultsForCampaignType(campaignType, agg) {
 }
 
 /**
- * Fetches account-level insights broken down by country.
- * Returns one row per country the account served ads in during the range.
+ * Fetches account-level insights for the selected country's campaigns
+ * (matched by campaign name), or the whole account when no country is
+ * selected. Filtering happens on Meta's side so reach stays de-duplicated
+ * across campaigns.
  */
-export async function getAccountInsightsByCountry(dateParams) {
+export async function getAccountInsightsByCountry(dateParams, countryCode) {
   const accountId = requireEnv("META_AD_ACCOUNT_ID");
-  const rows = await getEdge(`${accountId}/insights`, {
+  return getEdge(`${accountId}/insights`, {
     level: "account",
-    breakdowns: "country",
     fields: "spend,reach,impressions,frequency,clicks,cpm,actions",
+    filtering: campaignNameFilter(countryCode),
     limit: 500,
     ...dateParams,
   });
-  return filterToTrackedCountries(rows);
 }
 
 /**
- * Fetches ad-level insights broken down by country, so creatives can be
- * filtered/aggregated per selected country without relying on campaign
- * naming conventions.
+ * Spend per dashboard country for the "Spend by country" chart, grouping
+ * campaigns by the country in their name.
+ */
+export async function getSpendByCountry(dateParams) {
+  const accountId = requireEnv("META_AD_ACCOUNT_ID");
+  const rows = await getEdge(`${accountId}/insights`, {
+    level: "campaign",
+    fields: "campaign_name,spend",
+    limit: 500,
+    ...dateParams,
+  });
+
+  const spendByCode = new Map();
+  for (const row of rows) {
+    const code = countryCodeFromCampaignName(row.campaign_name);
+    if (!code) continue;
+    spendByCode.set(code, (spendByCode.get(code) || 0) + numberOr0(row.spend));
+  }
+  return [...spendByCode]
+    .map(([country, spend]) => ({ country, spend }))
+    .sort((a, b) => b.spend - a.spend);
+}
+
+/**
+ * Fetches ad-level insights broken down by delivery country (shown on each
+ * card), tagging every row with `campaignCountry` — the country its
+ * campaign name belongs to — which is what the country filter uses.
  */
 export async function getAdInsightsByCountry(dateParams) {
   const accountId = requireEnv("META_AD_ACCOUNT_ID");
   const rows = await getEdge(`${accountId}/insights`, {
     level: "ad",
     breakdowns: "country",
-    fields: "ad_id,ad_name,spend,reach,impressions,frequency,clicks,cpm,actions",
+    fields: "ad_id,ad_name,campaign_name,spend,reach,impressions,frequency,clicks,cpm,actions",
     limit: 500,
     ...dateParams,
   });
-  return filterToTrackedCountries(rows);
+  return rows.map((row) => ({
+    ...row,
+    campaignCountry: countryCodeFromCampaignName(row.campaign_name),
+  }));
 }
 
 const AD_FIELDS =
@@ -402,12 +435,11 @@ function aggregateRows(rows) {
   };
 }
 
-export function shapeSummary(countryRows, selectedCountryCode) {
-  const relevantRows = selectedCountryCode
-    ? countryRows.filter((r) => r.country === selectedCountryCode)
-    : countryRows;
-
-  const agg = aggregateRows(relevantRows);
+// `rows` are already scoped to the selected country by
+// getAccountInsightsByCountry; `byCountry` comes from getSpendByCountry and
+// is only needed for the all-countries chart.
+export function shapeSummary(rows, byCountry = []) {
+  const agg = aggregateRows(rows);
   // Stored as 0-1 fractions. Engagement rate is by impressions; interaction
   // rate is by reach (unique people).
   const engagementRate = agg.impressions > 0 ? agg.engagements / agg.impressions : 0;
@@ -420,14 +452,6 @@ export function shapeSummary(countryRows, selectedCountryCode) {
       extraActions.push({ label: candidate.label, value });
     }
   }
-
-  const byCountry = countryRows
-    .filter((r) => r.country && r.country !== "unknown")
-    .map((r) => ({
-      country: r.country,
-      spend: numberOr0(r.spend),
-    }))
-    .sort((a, b) => b.spend - a.spend);
 
   return {
     spend: agg.spend,
@@ -454,7 +478,7 @@ export function shapeSummary(countryRows, selectedCountryCode) {
 export function shapeCreatives(ads, adInsightRows, selectedCountryCode, videoSources, largeThumbnails) {
   const rowsByAd = new Map();
   for (const row of adInsightRows) {
-    if (selectedCountryCode && row.country !== selectedCountryCode) continue;
+    if (selectedCountryCode && row.campaignCountry !== selectedCountryCode) continue;
     const list = rowsByAd.get(row.ad_id) || [];
     list.push(row);
     rowsByAd.set(row.ad_id, list);
@@ -551,15 +575,16 @@ export async function loadWeekDashboardData(weekNumber, selectedCountryCode) {
       weekNumber,
       startDate: since,
       endDate: until,
-      summary: shapeSummary([], selectedCountryCode),
+      summary: shapeSummary([]),
       creatives: [],
     };
   }
 
   const dateParams = { time_range: { since, until } };
 
-  const [countryRows, adInsightRows] = await Promise.all([
-    getAccountInsightsByCountry(dateParams),
+  const [summaryRows, byCountry, adInsightRows] = await Promise.all([
+    getAccountInsightsByCountry(dateParams, selectedCountryCode),
+    selectedCountryCode ? [] : getSpendByCountry(dateParams),
     getAdInsightsByCountry(dateParams),
   ]);
 
@@ -573,7 +598,7 @@ export async function loadWeekDashboardData(weekNumber, selectedCountryCode) {
     getLargeThumbnails(thumbnailCreativeIds),
   ]);
 
-  const summary = shapeSummary(countryRows, selectedCountryCode);
+  const summary = shapeSummary(summaryRows, byCountry);
   const creatives = shapeCreatives(ads, adInsightRows, selectedCountryCode, videoSources, largeThumbnails);
 
   return { weekNumber, startDate: since, endDate: until, summary, creatives };
